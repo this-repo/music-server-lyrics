@@ -1,0 +1,29 @@
+{
+    "version": 2,
+    "functions": {
+        "api/genius.js": {
+            "maxDuration": 10,
+            "memory": 1024
+        }
+    },
+    "routes": [
+        {
+            "src": "/",
+            "status": 302,
+            "headers": {
+                "Location": "/api/genius"
+            }
+        },
+        {
+            "src": "/api/genius",
+            "dest": "/api/genius"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/genius"
+        }
+    ],
+    "env": {
+        "GENIUS_ACCESS_TOKEN": "@genius_access_token"
+    }
+}

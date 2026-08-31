@@ -1,0 +1,7 @@
+project/
+├── api/
+│   └── genius.js          # (sudah diberikan sebelumnya)
+├── vercel.json            # Konfigurasi routing Vercel
+├── package.json           # Dependencies & script
+├── .env.example           # Contoh variabel lingkungan
+└── README.md              # Panduan instalasi & penggunaan
