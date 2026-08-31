@@ -3,7 +3,14 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 const GENIUS_API_BASE = 'https://api.genius.com';
+
+// Ambil token dari environment variable
 const GENIUS_ACCESS_TOKEN = process.env.GENIUS_ACCESS_TOKEN;
+
+// Logging untuk debugging (akan muncul di Vercel Functions logs)
+console.log('=== GENIUS API INIT ===');
+console.log('Token exists?', !!GENIUS_ACCESS_TOKEN);
+console.log('Token length:', GENIUS_ACCESS_TOKEN ? GENIUS_ACCESS_TOKEN.length : 0);
 
 if (!GENIUS_ACCESS_TOKEN) {
     console.error('❌ GENIUS_ACCESS_TOKEN is not set in environment variables');
@@ -13,6 +20,7 @@ if (!GENIUS_ACCESS_TOKEN) {
  * Make authenticated request to Genius API
  */
 async function geniusRequest(endpoint, params = {}) {
+    console.log(`➡️ Requesting ${endpoint} with params:`, params);
     try {
         const response = await axios.get(`${GENIUS_API_BASE}${endpoint}`, {
             params,
@@ -23,9 +31,13 @@ async function geniusRequest(endpoint, params = {}) {
             },
             timeout: 10000,
         });
+        console.log(`✅ Response status: ${response.status}`);
         return response.data;
     } catch (error) {
+        console.error('❌ Axios error:', error.message);
         if (error.response) {
+            console.error('   Status:', error.response.status);
+            console.error('   Data:', JSON.stringify(error.response.data));
             throw {
                 status: error.response.status,
                 message: error.response.data?.error || error.response.statusText,
@@ -43,6 +55,7 @@ async function geniusRequest(endpoint, params = {}) {
  * Scrape lyrics from Genius song page
  */
 async function scrapeLyrics(songUrl) {
+    console.log(`📄 Scraping lyrics from: ${songUrl}`);
     try {
         const response = await axios.get(songUrl, {
             headers: {
@@ -59,6 +72,7 @@ async function scrapeLyrics(songUrl) {
             // Try alternative selectors
             const altContainers = $('.lyrics, .song_body-lyrics, [data-lyrics-container="true"]');
             if (altContainers.length === 0) {
+                console.log('⚠️ No lyrics container found');
                 return null;
             }
             const lyrics = altContainers
@@ -66,6 +80,7 @@ async function scrapeLyrics(songUrl) {
                 .get()
                 .join('\n')
                 .trim();
+            console.log(`✅ Scraped lyrics (alt): ${lyrics.length} chars`);
             return lyrics || null;
         }
 
@@ -75,9 +90,10 @@ async function scrapeLyrics(songUrl) {
             .join('\n')
             .trim();
 
+        console.log(`✅ Scraped lyrics: ${lyrics.length} chars`);
         return lyrics || null;
     } catch (error) {
-        console.error('Lyrics scraping error:', error.message);
+        console.error('❌ Scraping error:', error.message);
         return null;
     }
 }
@@ -128,6 +144,8 @@ export default async function handler(req, res) {
 
     const { action, ...params } = req.query;
 
+    console.log(`🔍 Incoming request: action=${action}, params=`, params);
+
     if (!action) {
         return res.status(400).json({
             error: 'Missing required parameter: action',
@@ -146,6 +164,7 @@ export default async function handler(req, res) {
 
     // Check for API token
     if (!GENIUS_ACCESS_TOKEN) {
+        console.error('❌ Token missing in handler');
         return res.status(503).json({
             error: 'Genius API token not configured on server',
             status: 503,
@@ -314,9 +333,10 @@ export default async function handler(req, res) {
                 });
         }
 
+        console.log(`✅ Request successful, sending response`);
         return res.status(status).json(result);
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('❌ API Error:', error);
         const status = error.status || 500;
         const message = error.message || 'Internal server error';
         return res.status(status).json({

@@ -22,8 +22,5 @@
             "src": "/api/(.*)",
             "dest": "/api/genius"
         }
-    ],
-    "env": {
-        "GENIUS_ACCESS_TOKEN": "GENIUS_ACCESS_TOKEN"
-    }
+    ]
 }
