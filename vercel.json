@@ -24,6 +24,6 @@
         }
     ],
     "env": {
-        "GENIUS_ACCESS_TOKEN": "@genius_access_token"
+        "GENIUS_ACCESS_TOKEN": "GENIUS_ACCESS_TOKEN"
     }
 }
